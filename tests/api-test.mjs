@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const root='http://127.0.0.1:8787';
+const identity={'oai-authenticated-user-id':'qa-user','oai-authenticated-user-email':'qa@example.test'};
+async function req(path,{body,owner=true,headers={}}={}){const r=await fetch(root+'/api/'+path,{method:body?'POST':'GET',headers:{...(owner?identity:{}),...(body&&!(body instanceof FormData)?{'Content-Type':'application/json'}:{}),...headers},body:body instanceof FormData?body:body?JSON.stringify(body):undefined});return {r,d:r.headers.get('content-type')?.includes('application/json')?await r.json():await r.arrayBuffer()}}
+assert.equal((await req('status')).d.ai,false);
+assert.equal((await req('profiles')).d.filter(p=>p.demo).length,15);
+const fd=new FormData();fd.append('file',new Blob([await readFile('public/images/shelf-1.jpg')],{type:'image/jpeg'}),'shelf.jpg');const up=await req('upload',{body:fd});assert.equal(up.r.status,200);
+assert.equal((await req(up.d.image.replace('/api/',''),{owner:false})).r.status,404);
+const bs=(await req('books?q=Zero%20to%20One')).d;assert.ok(bs.length>0);
+const payload={name:'QA Shelf',handle:'qa_shelf',bio:'Local verification only',interests:['Startups'],books:bs,image:up.d.image,visibility:'private'};
+const save=await req('profiles',{body:payload});assert.equal(save.r.status,200,JSON.stringify(save.d));const id=save.d.id;
+assert.equal((await req('profiles/'+id)).d.name,'QA Shelf');
+assert.equal((await req('profiles/'+id,{owner:false})).r.status,404);
+assert.equal((await req('profiles/'+id,{headers:{'oai-authenticated-user-id':'other','oai-authenticated-user-email':'other@example.test'}})).r.status,404);
+assert.equal((await req('profiles',{body:{...payload,id},headers:{'oai-authenticated-user-id':'other','oai-authenticated-user-email':'other@example.test'}})).r.status,403);
+assert.equal((await req('profiles',{body:payload,owner:false})).r.status,401);
+assert.ok((await req('profiles',{body:payload,headers:{Origin:'https://evil.example'}})).r.status>=400);
+assert.equal((await req('recognize',{body:{image:up.d.image}})).r.status,503);
+assert.equal((await req('profiles',{body:{...payload,id,visibility:'public'}})).r.status,200);
+assert.equal((await req('profiles/'+id,{owner:false})).r.status,200);
+assert.equal((await req(up.d.image.replace('/api/',''),{owner:false})).r.status,200);
+assert.equal((await fetch(root+'/compare/'+id+'/demo-1')).status,200);
+console.log('API checks passed: upload, search, persisted profile, private image/profile denial, cross-user denial, auth, CSRF, demo recognition, public sharing and comparison routes.');
