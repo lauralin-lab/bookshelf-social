@@ -16,7 +16,9 @@ Warm, editorial social discovery through books. This is a deployable P0 preview,
 
 ## Preview boundaries
 
-This deployment is owner-private. Links are stable but can only be opened by authorized site viewers. X crawlers cannot preview private sites. Profile visibility controls discovery *within* the site; it does not override site access.
+The site is publicly accessible at https://bookshelf-social-curiosity.deep-hake-5516.chatgpt.site/. Account-owned operations still require Sites sign-in. Profile visibility controls discovery within the site.
+
+Source is mirrored to GitHub. Production hosting remains on Sites with Cloudflare Workers, D1, and R2; a GitHub push alone does not trigger deployment. GitHub Pages cannot run this application’s server routes or storage bindings.
 
 The requested Supabase project credentials were not supplied. The hosted preview uses D1/R2 and Sites sign-in. Supabase Auth/database/storage and RLS migration are still required for the requested production stack. Do not mistake the preview storage for a Supabase integration.
 
@@ -24,7 +26,7 @@ Live AI has not been credentialed or integration-tested. Set `OPENAI_API_KEY` as
 
 Live discussion invitations, accepted private threads, notifications, follow relationships, blocking/reporting, and AI-written explanations are not connected. No fake messages or invitations are generated. Explanation and icebreaker text is deterministic and labeled. Saved shelf favorites are device-local bookmarks, not social follows.
 
-Basic validation, ownership authorization, origin checks, upload signatures and durable per-user hourly rate limits are implemented. Full production content moderation/abuse operations require further integration; this private preview is not ready to operate as an unrestricted public social network.
+Basic validation, ownership authorization, origin checks, upload signatures and durable per-user hourly rate limits are implemented. Full production content moderation/abuse operations require further integration; this P0 preview is not a fully operational social network.
 
 ## Local development
 
